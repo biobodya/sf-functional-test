@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpSolution\FunctionalTest\PhpUnit\Extension;
+namespace PhpSolution\FunctionalTest\PhpUnit\Extension\ElasticSearch;
 
 use PhpSolution\FunctionalTest\PhpUnit\Extension\Trait\ExitOnErrorAwareExtensionTrait;
 use PhpSolution\FunctionalTest\PhpUnit\Subscriber\PreRunCommandLauncherSubscriber;
@@ -11,21 +11,20 @@ use PHPUnit\Runner\Extension\Facade;
 use PHPUnit\Runner\Extension\ParameterCollection;
 use PHPUnit\TextUI\Configuration\Configuration;
 
-class RecreateDatabaseExtension implements Extension
+class OngrCreateIndexExtension implements Extension
 {
     use ExitOnErrorAwareExtensionTrait;
 
     public function bootstrap(Configuration $configuration, Facade $facade, ParameterCollection $parameters): void
     {
+        if (!$parameters->has('index')) {
+            echo '[OngrCreateIndexExtension] Index is required.' . PHP_EOL;
+            return;
+        }
+
         $facade->registerSubscriber(
             new PreRunCommandLauncherSubscriber(
-                'doctrine:database:drop --if-not-exists --force',
-                $this->exitOnError($parameters)
-            )
-        );
-        $facade->registerSubscriber(
-            new PreRunCommandLauncherSubscriber(
-                'doctrine:database:create --if-not-exists',
+                'ongr:es:index:create --if-not-exists --index=' . $parameters->get('index'),
                 $this->exitOnError($parameters)
             )
         );
